@@ -4,7 +4,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,7 +21,7 @@ public class JavaFileComplexityAnalyzer {
     public static void main(String[] args) {
         String filePathString = args.length > 0
                 ? args[0]
-                : "C:/Users/ADMIN/Desktop/Work/github/DSA/algorithms/graphs/3532_path_existence_queries_in_a_graph_1.java";
+                : "C:/Users/ADMIN/Desktop/Work/github/DSA/algorithms/graph/3532_path_existence_queries_in_a_graph_1.java";
         Path path = Paths.get(filePathString);
 
         if (!Files.exists(path)) {
@@ -56,9 +58,16 @@ public class JavaFileComplexityAnalyzer {
             }
         }
 
+        if (uniqueTerms.stream().anyMatch(term -> term.contains("*") || term.contains("^"))) {
+            String dominant = uniqueTerms.stream()
+                    .filter(term -> term.contains("*") || term.contains("^"))
+                    .max(Comparator.comparingInt(JavaFileComplexityAnalyzer::complexityWeight))
+                    .orElse(uniqueTerms.get(0));
+            return "O(" + dominant + ")";
+        }
+
         uniqueTerms.sort(Comparator.comparingInt(JavaFileComplexityAnalyzer::termRank)
                 .thenComparing(String::compareTo));
-
         return "O(" + String.join(" + ", uniqueTerms) + ")";
     }
 
@@ -84,15 +93,28 @@ public class JavaFileComplexityAnalyzer {
     }
 
     private static List<String> analyzeMethodTime(String body) {
+        List<LoopInfo> loops = extractLoops(body);
         List<String> terms = new ArrayList<>();
-        Matcher loopMatcher = LOOP_PATTERN.matcher(body);
 
-        while (loopMatcher.find()) {
-            String loopHeader = loopMatcher.group(0);
-            String loopVar = extractLoopVariable(loopHeader);
-            if (loopVar != null && !loopVar.isBlank()) {
-                terms.add(loopVar);
+        if (loops.isEmpty()) {
+            return terms;
+        }
+
+        loops.sort(Comparator.comparingInt(loop -> loop.startIndex));
+        List<LoopInfo> activeLoops = new ArrayList<>();
+
+        for (LoopInfo loop : loops) {
+            while (!activeLoops.isEmpty() && activeLoops.get(activeLoops.size() - 1).endIndex <= loop.startIndex) {
+                activeLoops.remove(activeLoops.size() - 1);
             }
+
+            List<String> chain = new ArrayList<>();
+            for (LoopInfo parent : activeLoops) {
+                chain.add(parent.variable);
+            }
+            chain.add(loop.variable);
+            terms.add(buildLoopTerm(chain));
+            activeLoops.add(loop);
         }
 
         return terms;
@@ -116,6 +138,83 @@ public class JavaFileComplexityAnalyzer {
         }
 
         return bodies;
+    }
+
+    private static List<LoopInfo> extractLoops(String body) {
+        List<LoopInfo> loops = new ArrayList<>();
+        Matcher matcher = LOOP_PATTERN.matcher(body);
+
+        while (matcher.find()) {
+            String loopHeader = matcher.group(0);
+            String loopVar = extractLoopVariable(loopHeader);
+            if (loopVar == null || loopVar.isBlank()) {
+                continue;
+            }
+
+            int startIndex = matcher.start();
+            int endIndex = findLoopBodyEnd(body, matcher.end());
+            loops.add(new LoopInfo(loopVar, startIndex, endIndex));
+        }
+
+        return loops;
+    }
+
+    private static int findLoopBodyEnd(String body, int headerEnd) {
+        int index = headerEnd;
+        while (index < body.length() && Character.isWhitespace(body.charAt(index))) {
+            index++;
+        }
+
+        if (index < body.length() && body.charAt(index) == '{') {
+            return findMatchingBrace(body, index);
+        }
+
+        int parenDepth = 0;
+        int braceDepth = 0;
+        int bracketDepth = 0;
+
+        for (int i = index; i < body.length(); i++) {
+            char c = body.charAt(i);
+            if (c == '(') {
+                parenDepth++;
+            } else if (c == ')') {
+                parenDepth = Math.max(0, parenDepth - 1);
+            } else if (c == '{') {
+                braceDepth++;
+            } else if (c == '}') {
+                braceDepth = Math.max(0, braceDepth - 1);
+            } else if (c == '[') {
+                bracketDepth++;
+            } else if (c == ']') {
+                bracketDepth = Math.max(0, bracketDepth - 1);
+            } else if (c == ';' && parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
+                return i;
+            }
+        }
+
+        return body.length();
+    }
+
+    private static String buildLoopTerm(List<String> chain) {
+        Map<String, Integer> counts = new HashMap<>();
+        for (String variable : chain) {
+            counts.put(variable, counts.getOrDefault(variable, 0) + 1);
+        }
+
+        List<String> factors = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+            String factor = entry.getKey();
+            if (entry.getValue() > 1) {
+                factor += "^" + entry.getValue();
+            }
+            factors.add(factor);
+        }
+
+        factors.sort(String::compareTo);
+        if (factors.isEmpty()) {
+            return "1";
+        }
+        return String.join(" * ", factors);
     }
 
     private static int findMatchingBrace(String code, int openBrace) {
@@ -282,5 +381,34 @@ public class JavaFileComplexityAnalyzer {
             return 2;
         }
         return 3;
+    }
+
+    private static int complexityWeight(String term) {
+        if (term == null || term.isBlank()) {
+            return 0;
+        }
+        if (term.contains("^")) {
+            try {
+                return Integer.parseInt(term.substring(term.lastIndexOf('^') + 1));
+            } catch (NumberFormatException e) {
+                return 2;
+            }
+        }
+        if (term.contains("*")) {
+            return 2;
+        }
+        return 1;
+    }
+
+    private static class LoopInfo {
+        private final String variable;
+        private final int startIndex;
+        private final int endIndex;
+
+        private LoopInfo(String variable, int startIndex, int endIndex) {
+            this.variable = variable;
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+        }
     }
 }
