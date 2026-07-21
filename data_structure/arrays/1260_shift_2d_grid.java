@@ -1,4 +1,4 @@
-package data_structure.stack.monotonic_stack.arrays;
+package data_structure.arrays;
 
 import java.util.ArrayList;
 import java.util.List;
