@@ -24,7 +24,7 @@ class Solution {
     }
 }
 
-public class GCD_of_odd_and_even_sums {
+public class Main {
     public static void main(String[] args) {
         Solution sol = new Solution();
         int n = 5; // Example input
