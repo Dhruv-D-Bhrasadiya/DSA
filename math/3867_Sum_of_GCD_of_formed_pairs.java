@@ -31,7 +31,7 @@ class Solution {
     }
 }
 
-public class Main {
+class Main {
     public static void main(String[] args) {
         Solution sol = new Solution();
         int[] n = {3, 6, 2, 8}; // Example input
