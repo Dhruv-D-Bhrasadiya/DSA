@@ -55,7 +55,6 @@ class Solution {
             freq[s.charAt(i) - 'a']++;
         }
 
-        char character = 'a';
         StringBuilder sb = new StringBuilder();
 
         for(int i = 0; i < 26; i++){
