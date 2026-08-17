@@ -1,3 +1,5 @@
+package algorithms.game_theory;
+
 class Solution {
     public int stoneGameV(int[] stoneValue) {
         int n = stoneValue.length;
