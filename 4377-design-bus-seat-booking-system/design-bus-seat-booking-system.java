@@ -1,12 +1,10 @@
 class BusBooking {
-    int seats[][];
-    int time = 0;
-    Set<String> set;
-    int count = 0;
+    private int seats[][];
+    private int time = 0;
+    private int count = 0;
 
     public BusBooking(int n) {
         seats = new int[n][4];
-        set = new HashSet<>();
     }
 
     public void toggle(String seat) {
