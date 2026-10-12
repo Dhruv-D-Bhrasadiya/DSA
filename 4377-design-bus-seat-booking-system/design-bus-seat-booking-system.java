@@ -1,10 +1,12 @@
 class BusBooking {
     private int seats[][];
-    private int time = 0;
-    private int count = 0;
+    private int time;
+    private int count;
 
     public BusBooking(int n) {
         seats = new int[n][4];
+        time = 0;
+        count = 0;
     }
 
     public void toggle(String seat) {
