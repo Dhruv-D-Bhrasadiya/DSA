@@ -9,13 +9,8 @@ class Solution {
                 sum = sum - n;
             }
             else{
-                // if(s.length() == num){
-                //     return "";
-                // }
-                // else{
-                    s.append(sum);
-                    sum = 0;
-                // }
+                s.append(sum);
+                sum = 0;
             }
         }
 
