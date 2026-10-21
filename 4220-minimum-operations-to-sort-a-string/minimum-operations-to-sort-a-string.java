@@ -9,9 +9,6 @@ class Solution {
             if(s.charAt(0) > s.charAt(1)){
                 return -1;
             }
-            else{
-                return 0;
-            }
         }
 
         boolean sorted = true;
@@ -32,7 +29,7 @@ class Solution {
         if(sorted){
             return 0;
         }
-        if(ch[0] ==min || ch[n - 1] == max){
+        if(ch[0] == min || ch[n - 1] == max){
             return 1;
         }
         for(int i = 1; i < n - 1; i++){
