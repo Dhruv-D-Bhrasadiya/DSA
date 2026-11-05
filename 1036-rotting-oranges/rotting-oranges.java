@@ -1,6 +1,6 @@
 class Solution {
     
-    private boolean safe(int i, int j, int n, int m){
+    static boolean safe(int i, int j, int n, int m){
         return 0 <= i && i < n && 0 <= j && j < m;
     }
     
@@ -9,32 +9,43 @@ class Solution {
         
         int n = grid.length;
         int m = grid[0].length;
-        
+
         int[][] dir = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
-        boolean change;
+        Queue<int[]> q = new LinkedList<>();
+        
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(grid[i][j] == 2){
+                    q.offer(new int[]{i, j}); 
+                }
+            }
+        }
 
-        while(true){
-            change = false;
-            for(int i = 0; i < n; i++){
-                for(int j = 0; j < m; j++){
-                    if(grid[i][j] == ans + 2){
-                        for(int[] d : dir){
-                            int x = i + d[0];
-                            int y = j + d[1];
+        while(!q.isEmpty()){
+            int size = q.size();
+            boolean change = false;
 
-                            if(safe(x, y, n, m) && grid[x][y] == 1){
-                                grid[x][y] = grid[i][j] + 1;
-                                change = true;
-                            }
-                        }
+            for(int i = 0; i < size; i++){
+                int cell[] = q.poll();
+
+                int x = cell[0];
+                int y = cell[1];
+
+                for(int[] d : dir){
+                    int nx = x + d[0];
+                    int ny = y + d[1];
+
+                    if(safe(nx, ny, n, m) && grid[nx][ny] == 1){
+                        grid[nx][ny] = 2;
+                        q.offer(new int[]{nx, ny});
+                        change = true;
                     }
                 }
             }
-            if(!change){
-                break;
+            if(change){
+                ans++;
             }
-            ans++;
         }
 
         for(int i = 0; i < n; i++){
@@ -47,5 +58,4 @@ class Solution {
 
         return ans;
     }
-
 }
