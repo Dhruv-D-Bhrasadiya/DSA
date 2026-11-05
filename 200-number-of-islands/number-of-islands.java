@@ -1,34 +1,40 @@
 class Solution {
-    public int numIslands(char[][] grid) {
-        if (grid == null || grid.length == 0) {
-            return 0;
+    
+    public static boolean isSafe(char[][] g, int i, int j, boolean[][] v, int n, int m){
+        return i >= 0 && j >= 0 && i < n && j < m && g[i][j] == '1' && !v[i][j];
+    }
+
+    public static void dfs(char[][] g, int i, int j, boolean[][] v, int n, int m){
+        v[i][j] = true;
+        int[] dr = {-1, 1, 0, 0};
+        int[] dc = {0, 0, -1, 1};
+
+        for(int k = 0; k < 4; k++){
+            int x = i + dr[k];
+            int y = j + dc[k];
+            if(isSafe(g, x, y, v, n, m)){
+                dfs(g, x, y, v, n, m);
+            }
         }
-        
-        int count = 0;
-        int m = grid.length;
-        int n = grid[0].length;
-        
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                if (grid[i][j] == '1') {
-                    count++;
-                    dfs(grid, i, j, m, n);
+    }
+
+    public int numIslands(char[][] g) {
+        int n = g.length;
+        int m = g[0].length;
+
+        boolean[][] v = new boolean[n][m];
+
+        int islands = 0;
+
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(g[i][j] == '1' && !v[i][j]){
+                    dfs(g, i, j, v, n, m);
+                    islands++;
                 }
             }
         }
-        return count;
-    }
-    
-    private void dfs(char[][] grid, int i, int j, int m, int n) {
-        if (i < 0 || i >= m || j < 0 || j >= n || grid[i][j] == '0') {
-            return;
-        }
-        
-        grid[i][j] = '0';
-        
-        dfs(grid, i + 1, j, m, n);
-        dfs(grid, i - 1, j, m, n);
-        dfs(grid, i, j + 1, m, n);
-        dfs(grid, i, j - 1, m, n);
+
+        return islands;
     }
 }
