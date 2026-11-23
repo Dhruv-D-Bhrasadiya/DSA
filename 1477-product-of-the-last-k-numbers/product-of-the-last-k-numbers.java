@@ -1,23 +1,32 @@
 class ProductOfNumbers {
-    List<Integer> nums;
+    private int nums[];
+    private int size;
 
     public ProductOfNumbers() {
-        nums = new ArrayList<>();
+        nums = new int[16];
+        nums[0] = 1;
+        size = 1;
     }
     
     public void add(int num) {
-        nums.add(num);
+        if(num == 0){
+            size = 1;
+            nums[0] = 1;
+        }
+        else{
+            if(size == nums.length){
+                nums = Arrays.copyOf(nums, size * 2);
+            }
+            nums[size] = nums[size - 1] * num;
+            size++;
+        }
     }
     
     public int getProduct(int k) {
-        int i = nums.size() - 1;
-        int prod = 1;
-        while(k > 0){
-            prod *= nums.get(i);
-            i--;
-            k--;
+        if(k >= size){
+            return 0;
         }
-        return prod;
+        return nums[size - 1] / nums[size - 1 - k];
     }
 }
 
