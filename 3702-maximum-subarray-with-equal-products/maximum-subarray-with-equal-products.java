@@ -13,7 +13,7 @@ class Solution {
         if(a == 0 || b == 0){
             return 0;
         }
-        return a / gcd(a, b) * b;
+        return (a / gcd(a, b)) * b;
     }
 
     public int maxLength(int[] nums) {
